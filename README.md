@@ -1,3 +1,3 @@
 # value_at_risk
 
-## Calculate Value-at-Risk (VaR) through historical and parametric methods
+## Calculate Value-at-Risk (VaR) of a portfolio through historical and parametric methods
