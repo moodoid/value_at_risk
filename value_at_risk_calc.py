@@ -1,15 +1,9 @@
 import re
 import pandas as pd
 import numpy as np
-from scipy.stats import norm
-from sklearn.linear_model import LinearRegression
-import itertools
 
-from zzz.risk_mgmt_var_stuff.option_assets import OptionTools
-from dash_data_support.bbg_query_assets import FetchBBG
-# from sql_assets.sql_configuration import ProcessSQL
-from sql_assets.server_sql_conn import QfundDatabase
-from zzz.dictionaries import FuturesMapping
+from typing import Union
+from scipy.stats import norm
 
 
 class ValueAtRisk:
@@ -17,44 +11,37 @@ class ValueAtRisk:
     Calculate Value at Risk through historical and parametric methods
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self, data: pd.Series, market_value: Union[int, float], mu: Union[int, float],
+                 sigma: Union[int, float]):
         '''
-        :param kwargs: int, float -> Marketvalue|market|value are the interpreted kwargs which should specify the notional
-        :param kwargs: pd.DataFrame -> df|dataframe|data N x 1 dataframe with price data and date as index
-        :param kwargs: int, float -> std|sigma are the given portfolio standard deviation to calculate the VaR using
+        :param data: pd.DataFrame -> N x 1 dataframe with price data and datetime as an index
+        :param market_value: int, float -> The specified notional value of the portfolio
+        :param sigma: int, float -> Given expected standard deviation of portfolio returns to calculate the VaR using
         the parametric VaR method
-        :param kwargs: int, float -> mu|mean are the given expected mean portfolio return to calculate the VaR using
+        :param mu: int, float -> Given expected mean of portfolio returns to calculate the VaR using
         the parametric VaR method
-        amount of the asset with respect to the exposures that the current portfolio maintains for which to calculate
-        VaR amounts
         '''
 
-        self.__kwargs = kwargs.keys()
+        self.__kwargs = locals()
 
         # setting attributes to kwargs
-        self.__market_value = np.nan
-        for kwarg, arg in kwargs.items():
-            if re.search('df|dataframe|data', kwarg, re.IGNORECASE):
-                self.__prices = arg.replace(0, np.nan)
-            elif re.search('market|value|market_value', kwarg, re.IGNORECASE):
-                self.market_value = arg  # type: int, float
-            elif re.search('std|sigma', kwarg, re.IGNORECASE):
-                self.__sigma = arg
-            elif re.search('mu|mean', kwarg, re.IGNORECASE):
-                self.__mu = arg
-            else:
-                pass
+        self.__market_value = market_value
+        self.__prices = data
 
         # setting default attributes and formatting dataframe and initializing rolling means and sigmas
-        self.__year = 248
+        self.__year = 252
         self.__annualizing_factor = 1
-        if type(getattr(self, 'prices')) is not str:
-            self.__returns = self.__prices.pct_change().dropna()
-            if len(self.__returns) < self.__year:
-                self.__rolling_window = len(self.__returns)
-            else:
-                self.__rolling_window = self.__year
-            self.__mu = self.__returns.rolling(window=self.__rolling_window).mean().dropna().iloc[-1, 0]
+
+
+        self.__returns = self.__prices.pct_change(periods=1).dropna()
+        self.__rolling_window = len(self.__returns) if len(self.__returns) < self.__year else self.__year
+
+        self.__mu = mu
+        self.__sigma = sigma
+
+
+
+        self.__mu = self.__returns.rolling(window=self.__rolling_window).mean().dropna().iloc[-1, 0]
             self.__sigma = self.__returns.rolling(window=self.__rolling_window).std().dropna().iloc[-1, 0]
             self.__annualizing_factor = np.sqrt(self.__year / self.__rolling_window)
         else:
@@ -91,16 +78,13 @@ class ValueAtRisk:
     def sigma(self):
         return self.__sigma
 
-    # def percentile(self, percentile: float = .01):
-    #     self.returns.quantile(1 - percentile)
-
-    def var_historical(self, alpha: float = .01, market_value: int = 1, iterations: int = 500, percent: bool = True):
+    def var_historical(self, alpha: float = .01, market_value: int = 1, iter: int = 500, pct: bool = True):
         '''
         Calculate the value at risk (VaR) from random samples (default sample number set to 500) of historical returns
         :param alpha: float -> Confidence level which translates to the quantile of returns corresponding to the highest
         available datapoint within the interval of data points that the specified quantile lies between
         :param market_value: int|float -> Nominal value (normally in EUR) of current exposure to asset
-        :param iterations: int -> Number of iterations to draw random samples from historical data
+        :param iter: int -> Number of iterations to draw random samples from historical data
         :return: float -> Nominal value of asset (EUR) at risk (VaR)
         '''
 
@@ -108,14 +92,15 @@ class ValueAtRisk:
             market_value = self.__market_value
 
         simulations = []
-        for _ in range(iterations):
+        for _ in range(iter):
             simulation = self.returns.sample(min(len(self.returns), self.__year), replace=True)
             simulations.append(simulation.quantile((1 - alpha), interpolation='higher') * self.annualizing_factor)
         var = np.mean(simulations)
 
         if np.isnan(var):
             var = 0.0
-        if percent:
+
+        if pct:
             return var * 100
         else:
             return var * market_value
@@ -225,7 +210,7 @@ class ComputeVAR:
     def compute_var(self, **kwargs):
         col_filt, var_type = None, None
         for kwarg, arg in kwargs.items():
-            if re.search('incremental|absolute', kwarg, re.IGNORECASE):
+            if re.search('incremental|absolute', kwarg, re.I):
                 var_type = kwarg
             else:
                 raise (Exception('Specify kwarg as incremental or absolute'))
@@ -234,7 +219,7 @@ class ComputeVAR:
         # filter prices and weights dataframe by tickers
         if re.search('absolute', var_type, re.I):
             col_list = [col for col in self.hist_returns_df.columns if
-                        re.search('|'.join(col_filt), str(col), re.IGNORECASE)]
+                        re.search('|'.join(col_filt), str(col), re.I)]
         elif re.search('incremental', var_type, re.I):
             col_list = [col for col in self.hist_returns_df.columns if col not in col_filt]
         else:
@@ -262,14 +247,14 @@ class ComputeVAR:
         portfolio_var_obj = VAR(df=portfolio_df, market_value=mkt_val)
         analytical_var_obj = VAR(sigma=portfolio_std, market_value=mkt_val)
 
-        if re.search('absolute', var_type, re.IGNORECASE):
+        if re.search('absolute', var_type, re.I):
             return pd.DataFrame(columns=['Portfolio VaR Price Series', 'Portfolio VaR Analytical'],
                                 data=[[portfolio_var_obj.var_parametric(percent=True),
                                        analytical_var_obj.var_parametric(percent=True)],
                                       [portfolio_var_obj.var_parametric(percent=False),
                                        analytical_var_obj.var_parametric(percent=False)
                                        ]], index=['Percent VaR', 'Notional Value VaR'])
-        elif re.search('incremental', var_type, re.IGNORECASE):
+        elif re.search('incremental', var_type, re.I):
             incremental_portfolio = self.portfolio_var.loc['Notional Value VaR', 'Portfolio VaR Price Series'].item() - \
                                     portfolio_var_obj.var_parametric(percent=False)
             incremental_analytical = self.portfolio_var.loc['Notional Value VaR', 'Portfolio VaR Analytical'].item() - \
@@ -281,4 +266,3 @@ class ComputeVAR:
                        incremental_analytical / self.portfolio_var.loc['Notional Value VaR',
                                                                        'Portfolio VaR Analytical'].item() * 100],
                       [incremental_portfolio, incremental_analytical]], index=['Percent VaR', 'Notional Value VaR'])
-
