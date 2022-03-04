@@ -79,19 +79,19 @@ class ParametricValueAtRisk(ValueAtRiskDefaultAttrs):
         :param alpha: float -> Confidence level which translates to the return threshold above the inverse CDF assuming
         our return distribution is normal or Gaussian (Default cutoff at .01)
         :param smooth_factor: float -> Alpha or smoothing factor to exponentially adjust weights in moving frame.
-        Note that if the class's sigma and mean were given then the smoothing factor will not be available (default is 1)
+        (Default is 1)
         :param pct: bool -> Set to False if notional value of asset is to be returned  (default is True)
 
         :return: float, int -> Notional value of asset at risk (VaR) or percentage based if param percent is True
         """
 
-        if smooth_factor == 1:
+        if smooth_factor == 1 or not isinstance(self.returns, type(None)):
             sigma = self.sigma
         else:
-            assert not isinstance(self.returns, type(None))
-            sigma = self.returns.ewm(alpha=smooth_factor, adjust=True, min_periods=self.roll_len).std().iloc[-1]
+            sigma = self.returns.ewm(alpha=smooth_factor, adjust=True, min_periods=self.roll_len).std().iloc[
+                        -1] * self.ann_factor
 
-        var = sigma * norm.ppf(1 - alpha) * self.ann_factor
+        var = sigma * norm.ppf(1 - alpha)
 
         if pct:
             return var * 100
