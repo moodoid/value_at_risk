@@ -25,7 +25,7 @@ class ValueAtRiskDefaultAttrs:
             self._mu = mu
             self._sigma = sigma
         else:
-            self._returns = data.sort_index(ascending=True).pct_change().dropna()
+            self._returns = data.sort_index(ascending=True).reset_index(drop=True).pct_change().dropna()
 
     @property
     def returns(self) -> Union[pd.Series, NoReturn]:

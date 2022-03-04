@@ -5,7 +5,7 @@ import pandas as pd
 from resources.var import VAR
 
 if __name__ == '__main__':
-    idx_len = 1000
+    idx_len = 50
     mu = 0
     sigma = .005
 
