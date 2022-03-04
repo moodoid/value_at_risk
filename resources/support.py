@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from typing import Union, Optional, NoReturn
+from typing import Union, NoReturn
 from scipy.stats import norm
 
 from value_at_risk.resources.exceptions import VARMethodsError, HistoricalVARMethodError
@@ -9,10 +9,10 @@ from value_at_risk.resources.exceptions import VARMethodsError, HistoricalVARMet
 
 class ValueAtRiskDefaultAttrs:
 
-    def __init__(self, data: Optional[Union[pd.Series, str], type(None)] = None,
-                 mu: Optional[Union[int, float], type(None)] = None,
-                 sigma: Optional[Union[int, float], type(None)] = None,
-                 mkt_val: Optional[Union[int, float], type(None)] = None):
+    def __init__(self, data: Union[pd.Series, str] = None,
+                 mu: Union[int, float] = None,
+                 sigma: Union[int, float] = None,
+                 mkt_val: Union[int, float] = None):
 
         self.trading_days = 252
 
@@ -53,22 +53,22 @@ class ValueAtRiskDefaultAttrs:
         if hasattr(self, '_mu'):
             return self._mu
         else:
-            return self.returns.rolling(window=self.roll_len).mean().dropna().mean().iloc[0]
+            return self.returns.rolling(window=self.roll_len).mean().dropna().iloc[-1]
 
     @property
     def sigma(self) -> Union[float, int]:
         if hasattr(self, '_sigma'):
             return self._sigma
         else:
-            return self.returns.rolling(window=self.roll_len).dropna().std().iloc[0]
+            return self.returns.rolling(window=self.roll_len).std().dropna().iloc[-1]
 
 
 class ParametricValueAtRisk(ValueAtRiskDefaultAttrs):
 
-    def __init__(self, data: Optional[Union[pd.Series, str], type(None)] = None,
-                 mu: Optional[Union[int, float], type(None)] = None,
-                 sigma: Optional[Union[int, float], type(None)] = None,
-                 mkt_val: Optional[Union[int, float], type(None)] = None):
+    def __init__(self, data: Union[pd.Series, str] = None,
+                 mu: Union[int, float] = None,
+                 sigma: Union[int, float] = None,
+                 mkt_val: Union[int, float] = None):
 
         ValueAtRiskDefaultAttrs.__init__(self, data=data, mu=mu, sigma=sigma, mkt_val=mkt_val)
 
@@ -89,7 +89,7 @@ class ParametricValueAtRisk(ValueAtRiskDefaultAttrs):
             sigma = self.sigma
         else:
             assert not isinstance(self.returns, type(None))
-            sigma = self.returns.iloc[-self.roll_len:, ].ewm(alpha=smooth_factor, adjust=True).std().iloc[0]
+            sigma = self.returns.ewm(alpha=smooth_factor, adjust=True, min_periods=self.roll_len).std().iloc[-1]
 
         var = sigma * norm.ppf(1 - alpha) * self.ann_factor
 
@@ -101,20 +101,20 @@ class ParametricValueAtRisk(ValueAtRiskDefaultAttrs):
 
 class HistoricalValueAtRisk(ValueAtRiskDefaultAttrs):
 
-    def __init__(self, data: Optional[Union[pd.Series, str], type(None)] = None,
-                 mu: Optional[Union[int, float], type(None)] = None,
-                 sigma: Optional[Union[int, float], type(None)] = None,
-                 mkt_val: Optional[Union[int, float], type(None)] = None):
+    def __init__(self, data: Union[pd.Series, str] = None,
+                 mu: Union[int, float] = None,
+                 sigma: Union[int, float] = None,
+                 mkt_val: Union[int, float] = None):
 
         ValueAtRiskDefaultAttrs.__init__(self, data=data, mu=mu, sigma=sigma, mkt_val=mkt_val)
 
-    def calculate_historical_var(self, alpha: float = .01, iter: int = 10000, pct: bool = True) -> Union[
+    def calculate_historical_var(self, alpha: float = .01, iter_: int = 1000, pct: bool = True) -> Union[
         float, int, HistoricalVARMethodError]:
         """
         Calculate the value at risk (VaR) from random samples (default sample number set to 10000) of historical returns
         :param alpha: float -> Confidence level which translates to the quantile of returns corresponding to the highest
         available datapoint within the interval of data points that the specified quantile lies between
-        :param iter: int -> Number of iterations to draw random samples from historical data (default at 1000)
+        :param iter_: int -> Number of iterations to draw random samples from historical data (default at 1000)
         :param pct: bool -> Set to False if notional value of asset is to be returned (default is True)
 
         :return: float, int -> Notional value of asset at risk (VaR) or percentage based if param percent is True
@@ -122,11 +122,11 @@ class HistoricalValueAtRisk(ValueAtRiskDefaultAttrs):
 
         returns = self.returns
 
-        if returns == HistoricalVARMethodError:
+        if not isinstance(returns, pd.Series):
             return HistoricalVARMethodError()
 
         func_vec = np.vectorize(
-            lambda: np.array([np.random.choice(returns, self.trading_days, replace=True) for _ in range(iter)]),
+            lambda: np.array([np.random.choice(returns.values, self.trading_days, replace=True) for _ in range(iter_)]),
             otypes=[int, float])
 
         simulations = np.apply_along_axis(lambda x: np.quantile(x, 1 - alpha, interpolation='higher'), 0, func_vec())
