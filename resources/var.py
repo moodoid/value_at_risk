@@ -38,8 +38,6 @@ class ValueAtRisk(ParametricValueAtRisk, HistoricalValueAtRisk):
         ParametricValueAtRisk.__init__(self, data=data, mu=mu, sigma=sigma, mkt_val=mkt_val)
         HistoricalValueAtRisk.__init__(self, data=data, mu=mu, sigma=sigma, mkt_val=mkt_val)
 
-        self.calculate_parametric_var(alpha=self.alpha, smooth_factor=self.smooth_factor, pct=self.pct)
-
     @property
     def historical_var(self):
         return self.calculate_historical_var(alpha=self.alpha, pct=self.pct)

@@ -73,7 +73,7 @@ class ParametricValueAtRisk(ValueAtRiskDefaultAttrs):
         ValueAtRiskDefaultAttrs.__init__(self, data=data, mu=mu, sigma=sigma, mkt_val=mkt_val)
 
     def calculate_parametric_var(self, alpha: float = .01, smooth_factor: float = 1.0, pct: bool = True) -> Union[
-        float, int]:
+        float, int, VARMethodsError]:
         """
         Calculate the value at risk (VaR) from
         :param alpha: float -> Confidence level which translates to the return threshold above the inverse CDF assuming
@@ -84,6 +84,10 @@ class ParametricValueAtRisk(ValueAtRiskDefaultAttrs):
 
         :return: float, int -> Notional value of asset at risk (VaR) or percentage based if param percent is True
         """
+
+        if not isinstance(self.returns, pd.Series) and (
+                not isinstance(self._mu, (int, float)) or not isinstance(self._sigma, (int, float))):
+            return VARMethodsError()
 
         if smooth_factor == 1 or not isinstance(self.returns, type(None)):
             sigma = self.sigma
@@ -109,7 +113,7 @@ class HistoricalValueAtRisk(ValueAtRiskDefaultAttrs):
         ValueAtRiskDefaultAttrs.__init__(self, data=data, mu=mu, sigma=sigma, mkt_val=mkt_val)
 
     def calculate_historical_var(self, alpha: float = .01, iter_: int = 1000, pct: bool = True) -> Union[
-        float, int, HistoricalVARMethodError]:
+        float, int, HistoricalVARMethodError, VARMethodsError]:
         """
         Calculate the value at risk (VaR) from random samples (default sample number set to 10000) of historical returns
         :param alpha: float -> Confidence level which translates to the quantile of returns corresponding to the highest
@@ -122,11 +126,14 @@ class HistoricalValueAtRisk(ValueAtRiskDefaultAttrs):
 
         returns = self.returns
 
-        if not isinstance(returns, pd.Series):
+        if not isinstance(returns, pd.Series) and (
+                not isinstance(self._mu, (int, float)) or not isinstance(self._sigma, (int, float))):
+            return VARMethodsError()
+        elif not isinstance(returns, pd.Series):
             return HistoricalVARMethodError()
 
         func_vec = np.vectorize(
-            lambda: np.array([np.random.choice(returns.values, self.trading_days, replace=True) for _ in range(iter_)]),
+            lambda: np.array([np.random.choice(returns, self.trading_days, replace=True) for _ in range(iter_)]),
             otypes=[int, float])
 
         simulations = np.apply_along_axis(lambda x: np.quantile(x, 1 - alpha, interpolation='higher'), 0, func_vec())

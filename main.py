@@ -5,7 +5,7 @@ import pandas as pd
 from resources.var import VAR
 
 if __name__ == '__main__':
-    idx_len = 50
+    idx_len = 10000
     mu = 0
     sigma = .005
 
@@ -14,4 +14,4 @@ if __name__ == '__main__':
                      index=[pd.date_range(dt.datetime.today(), periods=idx_len).tolist()]).apply(
         lambda x: x + 1).cumprod()
 
-    val_at_risk = VAR(data=data, mu=mu, sigma=sigma, smooth_factor=1, alpha=.05, pct=True)
+    val_at_risk = VAR( mu=mu, sigma=sigma, smooth_factor=1, alpha=.05, pct=True)
