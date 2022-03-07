@@ -14,4 +14,4 @@ if __name__ == '__main__':
                      index=[pd.date_range(dt.datetime.today(), periods=idx_len).tolist()]).apply(
         lambda x: x + 1).cumprod()
 
-    val_at_risk = VAR(mu=mu, sigma=sigma, alpha=.05)
+    val_at_risk = VAR(data=data, mu=mu, sigma=sigma, alpha=.05)

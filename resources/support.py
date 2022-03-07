@@ -7,7 +7,7 @@ from scipy.stats import norm
 from value_at_risk.resources.exceptions import VARMethodsError, HistoricalVARMethodError
 
 
-class ValueAtRiskDefaultAttrs:
+class ValueAtRiskBase:
 
     def __init__(self, data: Union[pd.Series, str] = None,
                  mu: Union[int, float] = None,
@@ -33,7 +33,7 @@ class ValueAtRiskDefaultAttrs:
             return self._returns
         else:
             if not isinstance(self._mu, (int, float)) or not isinstance(self._sigma, (int, float)):
-                raise VARMethodsError()
+                return VARMethodsError()
             else:
                 return HistoricalVARMethodError()
 
@@ -63,14 +63,14 @@ class ValueAtRiskDefaultAttrs:
             return self.returns.rolling(window=self.roll_len).std().dropna().iloc[-1]
 
 
-class ParametricValueAtRisk(ValueAtRiskDefaultAttrs):
+class ParametricValueAtRisk(ValueAtRiskBase):
 
     def __init__(self, data: Union[pd.Series, str] = None,
                  mu: Union[int, float] = None,
                  sigma: Union[int, float] = None,
                  mkt_val: Union[int, float] = None):
 
-        ValueAtRiskDefaultAttrs.__init__(self, data=data, mu=mu, sigma=sigma, mkt_val=mkt_val)
+        ValueAtRiskBase.__init__(self, data=data, mu=mu, sigma=sigma, mkt_val=mkt_val)
 
     def calculate_parametric_var(self, alpha: float = .01, smooth_factor: float = 1.0, pct: bool = True) -> Union[
             float, int, VARMethodsError]:
@@ -103,14 +103,14 @@ class ParametricValueAtRisk(ValueAtRiskDefaultAttrs):
             return var * self.mkt_val
 
 
-class HistoricalValueAtRisk(ValueAtRiskDefaultAttrs):
+class HistoricalValueAtRisk(ValueAtRiskBase):
 
     def __init__(self, data: Union[pd.Series, str] = None,
                  mu: Union[int, float] = None,
                  sigma: Union[int, float] = None,
                  mkt_val: Union[int, float] = None):
 
-        ValueAtRiskDefaultAttrs.__init__(self, data=data, mu=mu, sigma=sigma, mkt_val=mkt_val)
+        ValueAtRiskBase.__init__(self, data=data, mu=mu, sigma=sigma, mkt_val=mkt_val)
 
     def calculate_historical_var(self, alpha: float = .01, iter_: int = 1000, pct: bool = True) -> Union[
             float, int, HistoricalVARMethodError, VARMethodsError]:
