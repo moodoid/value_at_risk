@@ -27,7 +27,8 @@ class ValueAtRisk(ParametricValueAtRisk, HistoricalValueAtRisk):
         :param alpha: float -> Confidence level which translates to the return threshold above the inverse CDF assuming
         our return distribution is normal or Gaussian (Default cutoff at .01)
         :param smooth_factor: float -> Alpha or smoothing factor to exponentially adjust weights in moving frame.
-        Note that if the class's sigma and mean were given then the smoothing factor will not be available (default is 1)
+        Note that if the class's sigma and mean were given then the smoothing factor will not be available
+        (default is 1)
         :param pct: bool -> Set to False if notional value of asset is to be returned  (default is True)
 
         :return NoneType (Sets historical_var and parametric_var attrs)
@@ -69,7 +70,8 @@ class VAR(ValueAtRisk):
         :param alpha: float -> Confidence level which translates to the return threshold above the inverse CDF assuming
         our return distribution is normal or Gaussian (Default cutoff at .01)
         :param smooth_factor: float -> Alpha or smoothing factor to exponentially adjust weights in moving frame.
-        Note that if the class's sigma and mean were given then the smoothing factor will not be available (default is 1)
+        Note that if the class's sigma and mean were given then the smoothing factor will not be available
+        (default is 1)
         :param pct: bool -> Set to False if notional value of asset is to be returned  (default is True)
 
         :return NoneType (Sets historical_var and parametric_var attrs)

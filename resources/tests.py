@@ -26,7 +26,8 @@ class ValueAtRiskTests(unittest.TestCase):
         for test_case in self.accept_test_cases:
             var_obj = VAR(**test_case)
             self.assertIsInstance(type(var_obj.parametric_var), np.float64)
-            self.assertIsInstance(type(var_obj.historical_var), (int, np.int32, np.int64, np.float32, np.float64, float))
+            self.assertIsInstance(type(var_obj.historical_var),
+                                  (int, np.int32, np.int64, np.float32, np.float64, float))
 
         for test_case in self.partial_test_cases:
             var_obj = VAR(**test_case)

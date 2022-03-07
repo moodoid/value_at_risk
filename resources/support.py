@@ -25,7 +25,7 @@ class ValueAtRiskDefaultAttrs:
             self._mu = mu
             self._sigma = sigma
         else:
-            self._returns = data.sort_index(ascending=True).reset_index(drop=True).pct_change().dropna()
+            self._returns = data.sort_index().reset_index(drop=True).pct_change().dropna()
 
     @property
     def returns(self) -> Union[pd.Series, NoReturn]:
@@ -73,7 +73,7 @@ class ParametricValueAtRisk(ValueAtRiskDefaultAttrs):
         ValueAtRiskDefaultAttrs.__init__(self, data=data, mu=mu, sigma=sigma, mkt_val=mkt_val)
 
     def calculate_parametric_var(self, alpha: float = .01, smooth_factor: float = 1.0, pct: bool = True) -> Union[
-        float, int, VARMethodsError]:
+            float, int, VARMethodsError]:
         """
         Calculate the value at risk (VaR) from
         :param alpha: float -> Confidence level which translates to the return threshold above the inverse CDF assuming
@@ -92,7 +92,7 @@ class ParametricValueAtRisk(ValueAtRiskDefaultAttrs):
         if smooth_factor == 1 or not isinstance(self.returns, type(None)):
             sigma = self.sigma
         else:
-            sigma = self.returns.ewm(alpha=smooth_factor, adjust=True, min_periods=self.roll_len).std().iloc[
+            sigma = self.returns.ewm(alpha=smooth_factor, min_periods=self.roll_len).std().iloc[
                         -1] * self.ann_factor
 
         var = sigma * norm.ppf(1 - alpha)
@@ -113,7 +113,7 @@ class HistoricalValueAtRisk(ValueAtRiskDefaultAttrs):
         ValueAtRiskDefaultAttrs.__init__(self, data=data, mu=mu, sigma=sigma, mkt_val=mkt_val)
 
     def calculate_historical_var(self, alpha: float = .01, iter_: int = 1000, pct: bool = True) -> Union[
-        float, int, HistoricalVARMethodError, VARMethodsError]:
+            float, int, HistoricalVARMethodError, VARMethodsError]:
         """
         Calculate the value at risk (VaR) from random samples (default sample number set to 10000) of historical returns
         :param alpha: float -> Confidence level which translates to the quantile of returns corresponding to the highest
@@ -133,7 +133,7 @@ class HistoricalValueAtRisk(ValueAtRiskDefaultAttrs):
             return HistoricalVARMethodError()
 
         func_vec = np.vectorize(
-            lambda: np.array([np.random.choice(returns, self.trading_days, replace=True) for _ in range(iter_)]),
+            lambda: np.array([np.random.choice(returns, self.trading_days) for _ in range(iter_)]),
             otypes=[int, float])
 
         simulations = np.apply_along_axis(lambda x: np.quantile(x, 1 - alpha, interpolation='higher'), 0, func_vec())
