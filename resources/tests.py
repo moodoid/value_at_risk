@@ -7,20 +7,40 @@ from value_at_risk.resources.var import VAR
 from value_at_risk.resources.exceptions import HistoricalVARMethodError, VARMethodsError
 
 
-class ValueAtRiskTests(unittest.TestCase):
-    mu, sigma = 0, .005
-    idx_len = 500
-    accept_df = pd.Series(data=np.random.normal(loc=mu, scale=sigma, size=idx_len),
-                          index=[pd.date_range(dt.datetime.today(), periods=idx_len).tolist()]).apply(
-        lambda x: x + 1).cumprod()
+class ValueAtRiskTestCases:
+    def __init__(self):
+        self.mu, self.sigma = 0, .005
+        idx_len = 500
+        self.accept_df = pd.Series(data=np.random.normal(loc=self.mu, scale=self.sigma, size=idx_len),
+                                   index=[pd.date_range(dt.datetime.today(), periods=idx_len).tolist()]).apply(
+            lambda x: x + 1).cumprod()
 
-    acceptable_numerical_types = (int, type(np.int32), type(np.int64), type(np.float32), type(np.float64), float)
+    @property
+    def acceptable_numerical_types(self) -> tuple:
+        return int, type(np.int32), type(np.int64), type(np.float32), type(np.float64), float
 
-    accept_test_cases = [dict(data=accept_df, mu=mu, sigma=sigma)]
+    @property
+    def accept_cases(self) -> list:
+        return [dict(data=self.accept_df, mu=self.mu, sigma=self.sigma)]
 
-    partial_test_cases = [dict(mu=mu, sigma=sigma)]
+    @property
+    def partial_cases(self) -> list:
+        return [dict(mu=self.mu, sigma=self.sigma)]
 
-    reject_test_case = [dict()]
+    @property
+    def reject_cases(self) -> list:
+        return [dict()]
+
+
+class ValueAtRiskTest(unittest.TestCase):
+
+    def setUp(self) -> None:
+        test_cases = ValueAtRiskTestCases()
+
+        self.accept_test_cases = test_cases.accept_cases
+        self.partial_test_cases = test_cases.partial_cases
+        self.reject_test_case = test_cases.reject_cases
+        self.acceptable_numerical_types = test_cases.acceptable_numerical_types
 
     def test_results(self):
         for test_case in self.accept_test_cases:
