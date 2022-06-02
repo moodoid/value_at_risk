@@ -1,9 +1,15 @@
 # value_at_risk
+Calculate Value-at-Risk (VaR) of a portfolio through historical and parametric methods
 
-### Calculate Value-at-Risk (VaR) of a portfolio through historical and parametric methods
 
+## Installation
+`pip install value_at_risk`
 
+##Usage
 ```
+import pandas as pd
+import datetime as dt
+import numpy as np
 from value_at_risk import VAR 
 idx_len = 10000
 mu = 0
