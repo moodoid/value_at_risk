@@ -10,7 +10,7 @@ VERSION = '0.1.0'
 
 setup(
     name='value_at_risk',
-    version='1.0.1',
+    version='1.0.2',
     author='moodoid',
     keywords='Value-at-Risk Tool',
     packages=['value_at_risk'],
