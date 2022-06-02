@@ -1,4 +1,3 @@
-
 from setuptools import setup
 
 # Package meta-data.
@@ -8,7 +7,6 @@ URL = 'https://github.com/moodoid/value_at_risk'
 AUTHOR = 'moodoid'
 REQUIRES_PYTHON = '>=3.6.0'
 VERSION = '0.1.0'
-
 
 setup(
     name='value_at_risk',
@@ -20,10 +18,6 @@ setup(
     long_description='Calculate Value-at-Risk (VaR) of a portfolio through historical and parametric methods',
     long_description_content_type='text/plain',
     url='https://github.com/moodoid/value_at_risk',
-    classifiers=[
-        'Development Status :: 3 - Alpha',
-        'Intended Audience :: Developers',
-        'LICENSE :: OSI Approved :: GNU Lesser General Public LICENSE v3 (LGPLv3)',
-        'Programming Language :: Python :: 3'
-    ]
+    classifiers=['Intended Audience :: Developers',
+                 ]
 )
