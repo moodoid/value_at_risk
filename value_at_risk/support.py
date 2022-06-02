@@ -4,7 +4,7 @@ import numpy as np
 from typing import Union, NoReturn
 from scipy.stats import norm
 
-from value_at_risk.resources.exceptions import VARMethodsError, HistoricalVARMethodError
+from value_at_risk.exceptions import VARMethodsError, HistoricalVARMethodError
 
 
 class ValueAtRiskBase:
@@ -73,7 +73,7 @@ class ParametricValueAtRisk(ValueAtRiskBase):
         ValueAtRiskBase.__init__(self, data=data, mu=mu, sigma=sigma, mkt_val=mkt_val)
 
     def calculate_parametric_var(self, alpha: float = .01, smooth_factor: float = 1.0, pct: bool = True) -> Union[
-            float, int, VARMethodsError]:
+        float, int, VARMethodsError]:
         """
         Calculate the value at risk (VaR) from
         :param alpha: float -> Confidence level which translates to the return threshold above the inverse CDF assuming
@@ -113,7 +113,7 @@ class HistoricalValueAtRisk(ValueAtRiskBase):
         ValueAtRiskBase.__init__(self, data=data, mu=mu, sigma=sigma, mkt_val=mkt_val)
 
     def calculate_historical_var(self, alpha: float = .01, iter_: int = 1000, pct: bool = True) -> Union[
-            float, int, HistoricalVARMethodError, VARMethodsError]:
+        float, int, HistoricalVARMethodError, VARMethodsError]:
         """
         Calculate the value at risk (VaR) from random samples (default sample number set to 10000) of historical returns
         :param alpha: float -> Confidence level which translates to the quantile of returns corresponding to the highest

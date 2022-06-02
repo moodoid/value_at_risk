@@ -2,7 +2,7 @@ import pandas as pd
 
 from typing import Union
 
-from value_at_risk.resources.support import ParametricValueAtRisk, HistoricalValueAtRisk
+from value_at_risk.support import ParametricValueAtRisk, HistoricalValueAtRisk
 
 
 class ValueAtRisk(ParametricValueAtRisk, HistoricalValueAtRisk):

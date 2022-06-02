@@ -3,8 +3,8 @@ import pandas as pd
 import numpy as np
 import datetime as dt
 
-from value_at_risk.resources.var import VAR
-from value_at_risk.resources.exceptions import HistoricalVARMethodError, VARMethodsError
+from value_at_risk.var import VAR
+from value_at_risk.exceptions import HistoricalVARMethodError, VARMethodsError
 
 
 class ValueAtRiskTestCases:
