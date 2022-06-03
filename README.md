@@ -3,7 +3,7 @@ Calculate Value-at-Risk (VaR) of a portfolio through historical and parametric m
 
 
 ## Installation
-`pip install value-at-risk`
+`pip install --upgrade value-at-risk`
 
 ## Usage
 ```python 
