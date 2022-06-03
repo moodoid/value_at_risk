@@ -98,7 +98,7 @@ class ParametricValueAtRisk(ValueAtRiskBase):
         var = sigma * norm.ppf(1 - alpha)
 
         if pct:
-            return var * 100
+            return float(var)
         else:
             return var * self.mkt_val
 
@@ -141,6 +141,6 @@ class HistoricalValueAtRisk(ValueAtRiskBase):
         var = np.mean(simulations)
 
         if pct:
-            return var * 100
+            return float(var)
         else:
             return var * self.mkt_val
