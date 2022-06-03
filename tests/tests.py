@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import datetime as dt
 
-from value_at_risk.var import VAR
+from value_at_risk import VAR
 from value_at_risk.exceptions import HistoricalVARMethodError, VARMethodsError
 
 
