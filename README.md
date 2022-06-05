@@ -18,7 +18,7 @@ mu = 0
 sigma = .005
 
 data = pd.Series(data=np.random.normal(loc=mu, scale=sigma, size=idx_len),
-                 index=[pd.date_range(dt.datetime.today(), periods=idx_len).tolist()])                 
+                 index=pd.date_range(dt.datetime.today(), periods=idx_len).tolist())                 
 data = data.apply(lambda x: x + 1).cumprod()
 
 val_at_risk = VAR(data=data, mu=mu, sigma=sigma, alpha=.05, smooth_factor=1, pct=True)
